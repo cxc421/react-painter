@@ -11,8 +11,8 @@ const Wrapper = styled.div`
   margin-left: -28px;
 
   bottom: ${props => (props.open ? '120px' : '68px')};
-  @media (max-width: 769px) {
-    bottom: ${props => (props.open ? '226px' : '68px')};
+  @media (max-width: 888px) {
+    bottom: ${props => (props.open ? '241px' : '68px')};
   }
 
   margin-bottom: -28px;

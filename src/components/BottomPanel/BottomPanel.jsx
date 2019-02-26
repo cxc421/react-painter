@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { MdBrush } from 'react-icons/md';
 import SizeBlock from './SizeBlock.jsx';
 import ColorBlock from './ColorBlock.jsx';
 import ToggleIcon from './ToggleIcon';
+import ModeArea from './ModeArea';
 
 const Wrapper = styled.div`
   position: fixed;
@@ -27,28 +27,37 @@ const Wrapper = styled.div`
     }
   }
 
-  @media (max-width: 769px) {
+  @media (max-width: 888px) {
     white-space: pre-wrap;
-    padding: 16px 20px;
+    padding: 16px 24px;
 
     > * {
       display: flex;
+
       &:nth-child(n + 2) {
         margin-left: 0px;
-        margin-top: 5px;
+        margin-top: 10px;
       }
     }
   }
 `;
 
-function BottomPanel({ size, setSize, onCheckSize, color, setColor }) {
+function BottomPanel({
+  size,
+  setSize,
+  onCheckSize,
+  color,
+  setColor,
+  mode,
+  setMode
+}) {
   const [open, setOpen] = useState(true);
   const onTogglePanel = () => setOpen(!open);
 
   return (
     <>
       <Wrapper open={open}>
-        <MdBrush size={48} />
+        <ModeArea mode={mode} setMode={setMode} />
         <SizeBlock size={size} onCheckSize={onCheckSize} setSize={setSize} />
         <ColorBlock color={color} setColor={setColor} />
       </Wrapper>

@@ -3,10 +3,13 @@ import styled from 'styled-components';
 import TopPanel from './TopPanel/TopPanel.jsx';
 import BottomPanel from './BottomPanel/BottomPanel.jsx';
 
+const backgroundColor = '#e8e8e8';
+
 const Canvas = styled.canvas`
   width: 100%;
   height: 100%;
   background: #e8e8e8;
+  cursor: crosshair;
 `;
 
 const resizeCanvas = (() => {
@@ -19,7 +22,6 @@ const resizeCanvas = (() => {
       canvas.height = height;
       preWidth = width;
       preHeight = height;
-      console.log('resize');
     }
   };
 })();
@@ -44,20 +46,22 @@ function drawLine(canvas, x, y) {
 
 function drawDataImg(canvas, dataImg) {
   resizeCanvas(canvas);
-  // console.log('draw');
   const ctx = canvas.getContext('2d');
   var canvasPic = new Image();
   canvasPic.src = dataImg;
   canvasPic.onload = function() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(canvasPic, 0, 0);
-    console.log('draw');
   };
 }
 
 function clearCanvas(canvas) {
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 const checkSize = (() => {
@@ -84,19 +88,22 @@ export default () => {
   const canvasRef = useRef(null);
   const downloadTagRef = useRef(null);
   const [drawing, setDrawing] = useState(false);
-  const [size, setSize] = useState(10);
+  const [size, setSize] = useState(4);
   const [color, setColor] = useState('#000000');
   const [history, setHistory] = useState([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
+  const [mode, setMode] = useState('mode_draw');
 
-  console.log({ history, historyIdx });
+  // console.log({ history, historyIdx });
   const canRedo = history.length > historyIdx + 1;
   const canUndo = historyIdx > -1;
 
+  // First Time Resize
   useEffect(() => {
     resizeCanvas(canvasRef.current);
   }, []);
 
+  // Resize
   useEffect(() => {
     const onResize = () => {
       const dataImg = history[historyIdx];
@@ -121,8 +128,15 @@ export default () => {
   function onCanvasMouseDown(e) {
     setDrawing(true);
     const correctSize = checkSize(size);
+    const newColor = mode === 'mode_draw' ? color : backgroundColor;
     setSize(correctSize);
-    drawLineStart(canvasRef.current, e.clientX, e.clientY, color, correctSize);
+    drawLineStart(
+      canvasRef.current,
+      e.clientX,
+      e.clientY,
+      newColor,
+      correctSize
+    );
   }
 
   function onCanvasMouseMove(e) {
@@ -196,6 +210,8 @@ export default () => {
         onCheckSize={onCheckSize}
         color={color}
         setColor={setColor}
+        mode={mode}
+        setMode={setMode}
       />
       <a
         href="#?file"

@@ -17,7 +17,7 @@ const Container = styled.div`
   cursor: pointer;
   transition: background 300ms;
   &:hover {
-    background: lightgrey;
+    background: #e8e8e8;
   }
 
   > * {
