@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import ColorCircle from './ColorCircle.jsx';
 
@@ -12,9 +12,7 @@ const Wrapper = styled.div`
   }
 `;
 
-function ColorBlock() {
-  const [selectColor, setSelectColor] = useState('#000000');
-
+function ColorBlock({ color: selectColor, setColor: setSelectColor }) {
   return (
     <Wrapper>
       <span>COLOR:</span>

@@ -9,7 +9,12 @@ const Wrapper = styled.div`
   height: 56px;
   left: 50%;
   margin-left: -28px;
+
   bottom: ${props => (props.open ? '120px' : '68px')};
+  @media (max-width: 769px) {
+    bottom: ${props => (props.open ? '226px' : '68px')};
+  }
+
   margin-bottom: -28px;
   background: white;
   border-radius: 100%;

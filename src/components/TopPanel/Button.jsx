@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css as css2 } from 'styled-components';
 
 const Wrapper = styled.div`
   display: inline-block;
@@ -23,16 +23,27 @@ const Container = styled.div`
   > * {
     vertical-align: middle;
   }
-
   .btn-text {
     margin-left: 4px;
   }
+
+  ${({ disabled }) =>
+    disabled &&
+    css2`
+    color: grey;
+    pointer-events: none;
+  `};
 `;
 
-function Button({ Icon = () => null, text = '' }) {
+function Button({
+  Icon = () => null,
+  text = '',
+  onClick = f => f,
+  disabled = false
+}) {
   return (
     <Wrapper>
-      <Container>
+      <Container onClick={onClick} disabled={disabled}>
         <Icon size={48} />
         <span className="btn-text">{text}</span>
       </Container>
@@ -40,4 +51,4 @@ function Button({ Icon = () => null, text = '' }) {
   );
 }
 
-export default Button;
+export default React.memo(Button);

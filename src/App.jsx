@@ -1,8 +1,6 @@
 import React from 'react';
 import { createGlobalStyle } from 'styled-components';
 import Canvas from './components/Canvas.jsx';
-import TopPanel from './components/TopPanel/TopPanel.jsx';
-import BottomPanel from './components/BottomPanel/BottomPanel.jsx';
 
 const GlobalStyle = createGlobalStyle`
   *, *::before, *::after {
@@ -19,6 +17,7 @@ const GlobalStyle = createGlobalStyle`
   }
   body {
     overflow: hidden;
+    user-select: none;
   }
 `;
 
@@ -27,8 +26,6 @@ function App() {
     <>
       <GlobalStyle />
       <Canvas />
-      <TopPanel />
-      <BottomPanel />
     </>
   );
 }

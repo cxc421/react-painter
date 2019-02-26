@@ -41,7 +41,7 @@ const Wrapper = styled.div`
   }
 `;
 
-function BottomPanel() {
+function BottomPanel({ size, setSize, onCheckSize, color, setColor }) {
   const [open, setOpen] = useState(true);
   const onTogglePanel = () => setOpen(!open);
 
@@ -49,8 +49,8 @@ function BottomPanel() {
     <>
       <Wrapper open={open}>
         <MdBrush size={48} />
-        <SizeBlock />
-        <ColorBlock />
+        <SizeBlock size={size} onCheckSize={onCheckSize} setSize={setSize} />
+        <ColorBlock color={color} setColor={setColor} />
       </Wrapper>
       <ToggleIcon open={open} onClick={onTogglePanel} />
     </>
