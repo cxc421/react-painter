@@ -29,7 +29,11 @@ function drawLineStart(canvas, x, y, color = '#000', size = 10) {
   ctx.beginPath();
   ctx.strokeStyle = color;
   ctx.lineWidth = size;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   ctx.moveTo(x, y);
+  ctx.lineTo(x, y);
+  ctx.stroke();
 }
 
 function drawLine(canvas, x, y) {
