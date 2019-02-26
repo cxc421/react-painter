@@ -4,13 +4,15 @@ import styled from 'styled-components';
 const Wrapper = styled.div`
   display: inline-block;
   /* background: pink; */
-  padding: 16px 0;
-  margin: 0 6px;
+  padding: 14px 0;
+  margin: 0 14px;
 `;
 
 const Container = styled.div`
   /* background: skyblue; */
+  padding: 2px 0;
   padding-right: 8px;
+  padding-left: 2px;
   border-radius: 10px;
   cursor: pointer;
   transition: background 300ms;
