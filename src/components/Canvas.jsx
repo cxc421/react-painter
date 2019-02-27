@@ -19,6 +19,16 @@ const Window = styled.div`
   cursor: move;
 `;
 
+const makePicture = dataImg =>
+  new Promise((resolve, reject) => {
+    let canvasPic = new Image();
+    canvasPic.src = dataImg;
+    canvasPic.onload = function() {
+      resolve(canvasPic);
+    };
+    canvasPic.onerror = reject;
+  });
+
 const renderLoop = (() => {
   let canvas = null;
   let ctx = null;
@@ -105,6 +115,9 @@ const renderLoop = (() => {
     setDataImg(newDataImg) {
       dataImg = newDataImg;
     },
+    getDataImg() {
+      return dataImg;
+    },
     stopUpdate() {
       canUpdate = false;
     },
@@ -165,7 +178,10 @@ const checkSize = (() => {
 
 let oriX = 0;
 let oriY = 0;
-
+const memoryCanvas = document.createElement('canvas');
+const copyCanvas = document.createElement('canvas');
+const memoryCtx = memoryCanvas.getContext('2d');
+const copyCtx = copyCanvas.getContext('2d');
 export default () => {
   const canvasRef = useRef(null);
   const downloadTagRef = useRef(null);
@@ -176,10 +192,13 @@ export default () => {
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [mode, setMode] = useState('mode_draw');
 
+  const [oldWin, setOldWin] = useState(null);
   const [win, setWin] = useState({ x: 0, y: 0, h: 0, w: 0 });
   const [showWin, setShowWin] = useState(false);
   const [isCreateWindow, setIsCreateWindow] = useState(false);
   const [isAdjusteWindow, setIsAdjusteWindow] = useState(false);
+
+  // console.log({ history, historyIdx });
 
   // compute update
   const canRedo = history.length > historyIdx + 1;
@@ -220,6 +239,7 @@ export default () => {
         let w = Math.abs(win.x - e.clientX);
         let h = Math.abs(win.y - e.clientY);
         setWin({ x, y, w, h });
+        setShowWin(true);
       }
     }
     function onWindowMouseUp() {
@@ -241,12 +261,18 @@ export default () => {
       if (isAdjusteWindow) {
         let x = win.x + e.clientX - oriX;
         let y = win.y + e.clientY - oriY;
-        setWin({ ...win, x, y });
+        const newWin = { ...win, x, y };
+        setWin(newWin);
+        makeTmpDataImg(newWin);
       }
     }
     function onWindowMouseUp() {
       if (isAdjusteWindow) {
         setIsAdjusteWindow(false);
+        const dataImg = renderLoop.getDataImg();
+        if (dataImg) {
+          pushHistory(dataImg);
+        }
       }
     }
     window.addEventListener('mousemove', onWindowMouseMove);
@@ -257,6 +283,45 @@ export default () => {
     };
   }, [isAdjusteWindow]);
 
+  async function makeTmpDataImg(newWin) {
+    const dataImg = history[historyIdx];
+    if (!dataImg) return false;
+    // console.log(dataImg);
+    const dataPic = await makePicture(dataImg);
+    const canvas = canvasRef.current;
+    memoryCanvas.width = canvas.width;
+    memoryCanvas.height = canvas.height;
+    memoryCtx.drawImage(dataPic, 0, 0);
+    // copy
+    const copyImgData = memoryCtx.getImageData(
+      oldWin.x,
+      oldWin.y,
+      oldWin.w,
+      oldWin.h
+    );
+    copyCanvas.width = oldWin.w;
+    copyCanvas.height = oldWin.h;
+    copyCtx.putImageData(copyImgData, 0, 0);
+    const copyPic = await makePicture(copyCanvas.toDataURL());
+    // clear
+    memoryCtx.clearRect(oldWin.x, oldWin.y, oldWin.w, oldWin.h);
+    // paste
+    memoryCtx.drawImage(
+      copyPic,
+      0,
+      0,
+      oldWin.w,
+      oldWin.h,
+      newWin.x,
+      newWin.y,
+      newWin.w,
+      newWin.h
+    );
+    // set
+    renderLoop.setDataImg(memoryCanvas.toDataURL());
+    // console.log(memoryCanvas.toDataURL());
+  }
+
   function pushHistory(newDataImg) {
     let oldHistory = history.slice(0, historyIdx + 1);
     setHistory([...oldHistory, newDataImg]);
@@ -266,19 +331,20 @@ export default () => {
   function onWinMouseDown(e) {
     oriX = e.clientX;
     oriY = e.clientY;
+    setOldWin({ ...win });
     setIsAdjusteWindow(true);
   }
 
   function onCanvasMouseDown(e) {
-    setDrawing(true);
-    renderLoop.stopUpdate();
-
     if (mode === 'mode_window') {
       setIsCreateWindow(true);
-      setShowWin(true);
       setWin({ x: e.clientX, y: e.clientY, w: 3, h: 3 });
+      setShowWin(false);
       return;
     }
+
+    setDrawing(true);
+    renderLoop.stopUpdate();
 
     const correctSize = checkSize(size);
     setSize(correctSize);
@@ -356,6 +422,7 @@ export default () => {
         renderLoop.setDataImg(dataImg);
       }
       setHistoryIdx(historyIdx - 1);
+      setShowWin(false);
     }
   }
 
