@@ -176,12 +176,78 @@ const checkSize = (() => {
   };
 })();
 
+const updateMovingWindow = (() => {
+  const memoryCanvas = document.createElement('canvas');
+  const copyCanvas = document.createElement('canvas');
+  const memoryCtx = memoryCanvas.getContext('2d');
+  const copyCtx = copyCanvas.getContext('2d');
+  let isMakingNewSecence = false;
+  let buffer = null;
+
+  function _checkBuffer() {
+    isMakingNewSecence = false;
+    if (buffer) {
+      let tmp = buffer;
+      buffer = null;
+      _update(...tmp);
+    }
+  }
+
+  async function _update({ dataImg, oldWin, newWin, canvas }) {
+    isMakingNewSecence = true;
+    if (!dataImg) {
+      return _checkBuffer();
+    }
+    const dataPic = await makePicture(dataImg);
+    memoryCanvas.width = canvas.width;
+    memoryCanvas.height = canvas.height;
+    memoryCtx.drawImage(dataPic, 0, 0);
+    // copy
+    const copyImgData = memoryCtx.getImageData(
+      oldWin.x,
+      oldWin.y,
+      oldWin.w,
+      oldWin.h
+    );
+    copyCanvas.width = oldWin.w;
+    copyCanvas.height = oldWin.h;
+    copyCtx.putImageData(copyImgData, 0, 0);
+    const copyPic = await makePicture(copyCanvas.toDataURL());
+    // clear
+    memoryCtx.clearRect(oldWin.x, oldWin.y, oldWin.w, oldWin.h);
+    // paste
+    memoryCtx.drawImage(
+      copyPic,
+      0,
+      0,
+      oldWin.w,
+      oldWin.h,
+      newWin.x,
+      newWin.y,
+      newWin.w,
+      newWin.h
+    );
+    // set
+    renderLoop.setDataImg(memoryCanvas.toDataURL());
+    // check
+    return _checkBuffer();
+  }
+
+  return (...args) => {
+    if (isMakingNewSecence) {
+      if (buffer) {
+        console.log('neglect');
+      }
+      buffer = args;
+    } else {
+      _update(...args);
+    }
+  };
+})();
+
 let oriX = 0;
 let oriY = 0;
-const memoryCanvas = document.createElement('canvas');
-const copyCanvas = document.createElement('canvas');
-const memoryCtx = memoryCanvas.getContext('2d');
-const copyCtx = copyCanvas.getContext('2d');
+
 export default () => {
   const canvasRef = useRef(null);
   const downloadTagRef = useRef(null);
@@ -263,7 +329,13 @@ export default () => {
         let y = win.y + e.clientY - oriY;
         const newWin = { ...win, x, y };
         setWin(newWin);
-        makeTmpDataImg(newWin);
+        // makeTmpDataImg(newWin);
+        updateMovingWindow({
+          newWin,
+          oldWin,
+          canvas: canvasRef.current,
+          dataImg: history[historyIdx]
+        });
       }
     }
     function onWindowMouseUp() {
@@ -282,45 +354,6 @@ export default () => {
       window.removeEventListener('mouseup', onWindowMouseUp);
     };
   }, [isAdjusteWindow]);
-
-  async function makeTmpDataImg(newWin) {
-    const dataImg = history[historyIdx];
-    if (!dataImg) return false;
-    // console.log(dataImg);
-    const dataPic = await makePicture(dataImg);
-    const canvas = canvasRef.current;
-    memoryCanvas.width = canvas.width;
-    memoryCanvas.height = canvas.height;
-    memoryCtx.drawImage(dataPic, 0, 0);
-    // copy
-    const copyImgData = memoryCtx.getImageData(
-      oldWin.x,
-      oldWin.y,
-      oldWin.w,
-      oldWin.h
-    );
-    copyCanvas.width = oldWin.w;
-    copyCanvas.height = oldWin.h;
-    copyCtx.putImageData(copyImgData, 0, 0);
-    const copyPic = await makePicture(copyCanvas.toDataURL());
-    // clear
-    memoryCtx.clearRect(oldWin.x, oldWin.y, oldWin.w, oldWin.h);
-    // paste
-    memoryCtx.drawImage(
-      copyPic,
-      0,
-      0,
-      oldWin.w,
-      oldWin.h,
-      newWin.x,
-      newWin.y,
-      newWin.w,
-      newWin.h
-    );
-    // set
-    renderLoop.setDataImg(memoryCanvas.toDataURL());
-    // console.log(memoryCanvas.toDataURL());
-  }
 
   function pushHistory(newDataImg) {
     let oldHistory = history.slice(0, historyIdx + 1);
@@ -404,6 +437,7 @@ export default () => {
     let newDataImg = canvasRef.current.toDataURL();
     pushHistory(newDataImg);
     renderLoop.setDataImg(newDataImg);
+    setShowWin(false);
   }
 
   function onCheckSize() {
